@@ -116,7 +116,7 @@
             cursor: pointer;
         }
         @keyframes pulse {
-            0% { transform: scale(1); }
+            0 { transform: scale(1); }
             50% { transform: scale(1.08); }
             100% { transform: scale(1); }
         }
@@ -129,7 +129,7 @@
         <small style="color: #64748b; letter-spacing: 2px;">ACCESSIBILITY AI LINK</small>
     </div>
 
-    <div id="hiddenTrigger" style="display:none; color:transparent; width:1px; height:1px;">kazi</div>
+    <div id="hiddenTrigger" style="display:none;">kazi</div>
     <div class="sys-log" id="statusDisplay">JARVIS CORES ONLINE</div>
 
     <div class="chat-container" id="chatBoard">
@@ -139,7 +139,7 @@
     </div>
 
     <div class="input-panel">
-        <input type="text" class="text-input" id="userInput" placeholder="Andika ujumbe au amri hapa...">
+        <input type="text" class="text-input" id="userInput" placeholder="Andika amri hapa...">
         <button class="send-btn" onclick="tumaUjumbeMeneja()">Tuma</button>
         
         <button class="mic-btn" id="micButton" onclick="anzishaSautiNative()" aria-label="Ongea na Jarvis">
@@ -161,7 +161,7 @@
 
         function ongeaJarvis(maandishi) {
             if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel(); // Zima sauti ya nyuma kwanza
+                window.speechSynthesis.cancel(); 
                 const speech = new SpeechSynthesisUtterance(maandishi);
                 speech.lang = 'sw-TZ'; 
                 speech.rate = 1.0;
@@ -205,7 +205,6 @@
             }
         }
 
-        // Ilitengenezwa upya kuzuia kosa la uandishi la mwanzo
         function tumaUjumbeMeneja() {
             const text = userInput.value;
             if (!text.trim()) return;
@@ -214,14 +213,11 @@
             chambuaAmri(text);
         }
 
-        // MFUMO MPYA WA MIC (Kutumia Capacitor Native Speech Recognition)
         async function anzishaSautiNative() {
             try {
-                // Kuangalia kama Plugin ya Capacitor ipo tayari kwenye simu
                 if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SpeechRecognition) {
                     const SpeechRecognition = window.Capacitor.Plugins.SpeechRecognition;
                     
-                    // Omba ruhusa ya Mic kwenye simu yako ya Android
                     const permission = await SpeechRecognition.requestPermission();
                     if (!permission.permission) {
                         statusDisplay.innerText = "MIC PERMISSION DENIED";
@@ -231,7 +227,6 @@
                     micButton.classList.add('listening');
                     statusDisplay.innerText = "JARVIS LISTENING (NATIVE)...";
 
-                    // Anzisha usikilizaji wa lugha ya Kiswahili ya Tanzania
                     SpeechRecognition.start({
                         language: "sw-TZ",
                         maxResults: 1,
@@ -239,7 +234,8 @@
                         partialResults: false
                     }).then((result) => {
                         micButton.classList.remove('listening');
-                        if (result matches && result.matches.length > 0) {
+                        // Kosa la kisintaksi limesahihishwa hapa kwa kuweka mabano sahihi
+                        if (result && result.matches && result.matches.length > 0) {
                             const kasema = result.matches[0];
                             wekaChat(kasema, 'user');
                             chambuaAmri(kasema);
@@ -251,11 +247,10 @@
                     });
 
                 } else {
-                    // Mfumo wa dharura wa Web Recognition kama ikirun kwenye browser ya kawaida
                     statusDisplay.innerText = "FALLBACK TO WEB MIC...";
                     const WebRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                     if (!WebRecognition) {
-                        statusDisplay.innerText = "SPEECH NOT SUPPORTED ON THIS DEVICE";
+                        statusDisplay.innerText = "SPEECH NOT SUPPORTED";
                         return;
                     }
                     const rec = new WebRecognition();
