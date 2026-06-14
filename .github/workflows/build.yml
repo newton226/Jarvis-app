@@ -1,0 +1,67 @@
+name: Build Android APK
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Inject JARVIS Native Engine with Voice Plugin
+        run: |
+          mkdir -p www
+          cp index.html www/
+          
+          echo '{
+            "name": "jarvis-ai-system",
+            "version": "1.0.0",
+            "dependencies": {
+              "@capacitor/android": "^6.0.0",
+              "@capacitor/cli": "^6.0.0",
+              "@capacitor/core": "^6.0.0",
+              "@capacitor-community/speech-recognition": "^6.0.0"
+            }
+          }' > package.json
+          
+          npm install
+          npx cap init "JARVIS SYSTEM" "com.muslimu.jarvisai" --web-dir=www
+          npx cap add android
+
+          mkdir -p android/app/src/main/res/xml
+          mkdir -p android/app/src/main/res/values
+          mkdir -p android/app/src/main/java/com/muslimu/jarvisai
+          
+          cp AndroidManifest.xml android/app/src/main/AndroidManifest.xml
+          cp jarvis_accessibility_config.xml android/app/src/main/res/xml/jarvis_accessibility_config.xml
+          cp JarvisAccessibilityService.java android/app/src/main/java/com/muslimu/jarvisai/JarvisAccessibilityService.java
+          
+          echo '<?xml version="1.0" encoding="utf-8"?><resources><string name="accessibility_description">Mfumo thabiti wa J.A.R.V.I.S unasaidia kusoma skrini na kudhibiti WiFi.</string></resources>' > android/app/src/main/res/values/strings_jarvis.xml
+
+      - name: Build APK with Gradle
+        run: |
+          cd android
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: JARVIS-Native-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
